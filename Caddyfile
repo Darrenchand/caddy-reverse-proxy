@@ -1,0 +1,46 @@
+(cors_preflight) {
+    @cors_preflight method OPTIONS
+    handle @cors_preflight {
+        header {
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Origin "{args[0]}"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Origin, Referer, User-Agent, Authorization, Accept, Content-Type, Access-Control-Request-Methods, Access-Control-Request-Origin"
+            Access-Control-Max-Age "1800"
+        }
+        respond "" 204
+    }
+}
+
+(cors) {
+    @cors header Origin {args[0]}
+    handle @cors {
+        header {
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Origin "{args[0]}"
+            Access-Control-Allow-Headers "Origin, Referer, User-Agent, Authorization, Accept, Content-Type, Access-Control-Request-Methods, Access-Control-Request-Origin"
+        }
+    }
+}
+
+:80 {
+    reverse_proxy https://your-endpoint.net {
+        header_up X-Forwarded-For {remote}
+        header_up X-Real-IP {remote}
+        header_up Host {host}
+        header_up User-Agent {http.request.header.User-Agent}
+        header_up Accept {http.request.header.Accept}
+        header_up Content-Type {http.request.header.Content-Type}
+        header_up Content-Length {http.request.header.Content-Length}
+        header_up Host {http.request.header.Host}
+        header_up Accept-Encoding {http.request.header.Accept-Encoding}
+        header_up Authorization {http.request.header.Authorization}
+        # forward any other headers
+
+    }
+
+    # Handle CORS for requests to http://localhost:3000
+    # Update Address to match your local served application.
+    import cors_preflight http://localhost:3000
+    import cors http://localhost:3000
+}

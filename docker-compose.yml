@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  caddy:
+    image: caddy:latest
+    ports:
+      # foward ports, my local endpoint runs on port 4200 
+      - 80:80
+      - 4200:80
+      - 443:443
+    environment:
+      # Connects the Caddy service to an external Docker network named 
+      - CADDY_INGRESS_NETWORKS=caddy
+      - CADDY_ENDPOINT=https://d1gx2x7wcryfrt.cloudfront.net  # Set your endpoint here
+    networks:
+      - caddy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    restart: unless-stopped
+
+networks:
+# Defines an external network named caddy that must already exist. This allows the Caddy service to interact with other services on the same network
+  caddy:
+    external: true
+volumes:
+  caddy_data: {}
